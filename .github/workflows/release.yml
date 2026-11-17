@@ -7,7 +7,20 @@ name: release
 on:
   push:
     tags: ["v*.*.*"]
+  # Essai depuis une branche : `version` grave cette version dans les binaires et le manifeste ;
+  # `publish` crée alors une pré-release publiée (pas un brouillon) v<version> sur le commit de la
+  # branche, que l'updater voit sur le canal prerelease.
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version d'essai (ex. 0.11.1-test1), vide : build sans release"
+        required: false
+        type: string
+      publish:
+        description: "Publier une pré-release v<version> (exige version)"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -15,7 +28,35 @@ permissions:
   attestations: write
 
 jobs:
+  # Binaire Linux statique (musl) : pas de dépendance à la libc du joueur (Steam Deck compris).
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Rust (musl)
+        run: |
+          rustup target add x86_64-unknown-linux-musl
+          sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - name: Tests
+        run: cd updater_linux && cargo test --release --locked
+
+      - name: Compilation
+        run: |
+          cd updater_linux && cargo build --release --locked --target x86_64-unknown-linux-musl
+          mkdir -p ../linux-dist
+          cp target/x86_64-unknown-linux-musl/release/BetterGameExperience ../linux-dist/BetterGameExperience-linux-x86_64
+          cp ../install.sh ../linux-dist/install.sh
+          file ../linux-dist/BetterGameExperience-linux-x86_64
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux-dist
+          path: linux-dist/
+
   release:
+    needs: linux
     runs-on: windows-latest
     defaults:
       run:
@@ -24,8 +65,12 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
-          if [ "$GITHUB_REF_TYPE" = tag ]; then v="${GITHUB_REF_NAME#v}"; else v="0.0.0-dev"; fi
+          if [ "$GITHUB_REF_TYPE" = tag ]; then v="${GITHUB_REF_NAME#v}"; echo "RELEASE_BUILD=1" >> "$GITHUB_ENV"
+          elif [ -n "$INPUT_VERSION" ]; then v="${INPUT_VERSION#v}"; echo "RELEASE_BUILD=1" >> "$GITHUB_ENV"
+          else v="0.0.0-dev"; fi
           echo "VERSION=$v" >> "$GITHUB_ENV"
 
       # Proxys : chaîne GNU, avec son éditeur de liens embarqué (startup_proxy/build.rs passe un .def
@@ -66,7 +111,7 @@ jobs:
         env:
           BGE_RAPPORT_URL: ${{ vars.BGE_RAPPORT_URL }}
         run: |
-          if [ "$GITHUB_REF_TYPE" = tag ]; then export BGD_RELEASE="$VERSION"; fi
+          if [ -n "$RELEASE_BUILD" ]; then export BGD_RELEASE="$VERSION"; fi
           (cd proxy && cargo build --release --no-default-features)
           (cd startup_proxy && cargo build --release --no-default-features)
           (cd updater && cargo +stable-x86_64-pc-windows-msvc build --release)
@@ -77,12 +122,17 @@ jobs:
           # (updater/README.md).
           cp updater/target/release/BetterGameExperience.exe "dist/BetterGameExperience_V$VERSION.exe"
 
+      - uses: actions/download-artifact@v7
+        with:
+          name: linux-dist
+          path: dist/
+
       - name: Manifeste signé
         env:
           BGD_SIGNING_KEY: ${{ secrets.BGD_SIGNING_KEY }}
         run: |
           pip install cryptography
-          v="$VERSION"; [ "$GITHUB_REF_TYPE" = tag ] || v=0.0.0
+          v="$VERSION"; [ -n "$RELEASE_BUILD" ] || v=0.0.0
           python release/manifest.py build --version "$v" --out dist/manifest.json dist
           python release/manifest.py sign dist/manifest.json
           python release/manifest.py verify dist/manifest.json
@@ -103,3 +153,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" dist/* --draft --title "BetterGameExperience $VERSION" --notes-file notes.md
+
+      # Essai depuis une branche : pré-release publiée, sans brouillon, sur le commit courant.
+      - name: Pré-release d'essai
+        if: github.ref_type != 'tag' && inputs.publish && inputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "v$VERSION" dist/* --prerelease --target "$GITHUB_SHA" --title "BetterGameExperience $VERSION (essai)" --notes "Build d'essai de la branche $GITHUB_REF_NAME ($GITHUB_SHA)."

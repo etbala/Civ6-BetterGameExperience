@@ -33,6 +33,17 @@ jobs:
           (cd startup_proxy && cargo test --release --locked && cargo test --release --locked --no-default-features)
           (cd updater && cargo +stable-x86_64-pc-windows-msvc test --release --locked)
 
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Tests de l'installeur Linux
+        run: cd updater_linux && cargo test --locked
+
+      - name: Script d'installation
+        run: sh -n install.sh
+
   scripts:
     runs-on: ubuntu-latest
     steps:
