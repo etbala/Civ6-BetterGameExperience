@@ -15,10 +15,10 @@ use sha2::{Digest, Sha256};
 use crate::lang::{self, t};
 use crate::textes as tx;
 
-const RELEASES: &str = "https://github.com/Goaterino/Civ6-BetterGameExperience/releases";
+const RELEASES: &str = "https://github.com/etbala/Civ6-BetterGameExperience/releases";
 /// Liste des releases publiées (les brouillons n'y sont pas sans jeton), pour le canal pré-release :
 /// `releases/latest` ne désigne jamais une pré-release.
-const API_RELEASES: &str = "https://api.github.com/repos/Goaterino/Civ6-BetterGameExperience/releases?per_page=30";
+const API_RELEASES: &str = "https://api.github.com/repos/etbala/Civ6-BetterGameExperience/releases?per_page=30";
 const PUBLIC_KEY: &str = include_str!("../../release/public_key.txt");
 
 #[derive(Deserialize)]

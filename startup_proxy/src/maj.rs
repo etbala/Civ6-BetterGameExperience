@@ -21,11 +21,11 @@ use std::sync::{Mutex, Once};
 pub const LUA_BLOCK: &str = concat!(include_str!("../../textes/bgd_textes.lua"), include_str!("../../textes/bgd_texte.lua"), include_str!("maj.lua"));
 pub const SCRIPT: &str = "mainmenu.lua";
 
-const MANIFEST_URL: &str = "https://github.com/Goaterino/Civ6-BetterGameExperience/releases/latest/download/manifest.json";
-const RELEASE_PAGE: &str = "https://github.com/Goaterino/Civ6-BetterGameExperience/releases/latest";
-const TAG_PAGE: &str = "https://github.com/Goaterino/Civ6-BetterGameExperience/releases/tag/v";
+const MANIFEST_URL: &str = "https://github.com/etbala/Civ6-BetterGameExperience/releases/latest/download/manifest.json";
+const RELEASE_PAGE: &str = "https://github.com/etbala/Civ6-BetterGameExperience/releases/latest";
+const TAG_PAGE: &str = "https://github.com/etbala/Civ6-BetterGameExperience/releases/tag/v";
 /// Releases publiées, les plus récentes d'abord (sans jeton, les brouillons n'y sont pas).
-const API_RELEASES: &str = "https://api.github.com/repos/Goaterino/Civ6-BetterGameExperience/releases?per_page=30";
+const API_RELEASES: &str = "https://api.github.com/repos/etbala/Civ6-BetterGameExperience/releases?per_page=30";
 
 /// Dernière version trouvée, et si c'est une pré-release.
 #[derive(Clone, Debug, PartialEq)]

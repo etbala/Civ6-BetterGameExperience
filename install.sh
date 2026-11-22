@@ -17,7 +17,7 @@
 #                            it switches back to the release channel.
 set -eu
 
-REPO="Goaterino/Civ6-BetterGameExperience"
+REPO="etbala/Civ6-BetterGameExperience"
 ASSET="BetterGameExperience-linux-x86_64"
 
 command=install
