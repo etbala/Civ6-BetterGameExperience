@@ -4,6 +4,10 @@ Other languages: [Français](changelog/fr.md) · [Deutsch](changelog/de.md) · [
 [Italiano](changelog/it.md) · [日本語](changelog/ja.md) · [한국어](changelog/ko.md) · [Polski](changelog/pl.md) ·
 [Português (Brasil)](changelog/pt-BR.md) · [Русский](changelog/ru.md) · [简体中文](changelog/zh-CN.md)
 
+## BetterGameExperience 0.15.2
+
+### Second release for testing updates
+
 ## BetterGameExperience 0.15.1
 
 ### Switch to use fork as source of truth for testing
